@@ -1,0 +1,260 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+
+class JDBCUtilities {
+    private static final String DATABASE_LOCATION = "ProyectosConstruccion.db";
+
+    public static Connection getConnection() throws SQLException {
+        String url = "jdbc:sqlite:"+DATABASE_LOCATION;
+
+        return DriverManager.getConnection(url);
+    }
+}
+
+public class VistaRequerimientos {
+
+    public static final ControladorRequerimientos controlador = new ControladorRequerimientos();
+
+    public static void requerimiento1(){
+        try {
+            var requerimiento1s = controlador.consultarRequerimiento1();
+
+            for(Requerimiento_1 registro : requerimiento1s){
+                System.out.printf("%s %d %n", registro.getNombreMaterial(),
+                                        registro.getPrecioUnidad());
+            }
+
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
+
+    public static void requerimiento2(){
+        try {
+            var requerimiento2s = controlador.consultarRequerimiento2();
+
+            for(Requerimiento_2 registro : requerimiento2s){
+                System.out.printf("%s %s %n", registro.getConstructora(),
+                                        registro.getCiudad());
+            }
+
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
+
+    public static void requerimiento3(){
+        try {
+            var requerimiento3s = controlador.consultarRequerimiento3();
+
+            for(Requerimiento_3 registro : requerimiento3s){
+                System.out.printf("%s %s %s %d %d %n", registro.getProveedor(),
+                                        registro.getNombre_material(),
+                                        registro.getImportado(),
+                                        registro.getPrecio_Unidad(),
+                                        registro.getCantidad());
+            }
+            
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+    }
+    
+}
+
+public class ControladorRequerimientos {
+    private Requerimiento_1Dao requerimiento_1Dao;
+    private Requerimiento_2Dao requerimiento_2Dao;
+    private Requerimiento_3Dao requerimiento_3Dao;
+
+    public ControladorRequerimientos(){
+        this.requerimiento_1Dao = new Requerimiento_1Dao();
+        this.requerimiento_2Dao = new Requerimiento_2Dao();
+        this.requerimiento_3Dao = new Requerimiento_3Dao();
+    }
+    
+    public ArrayList<Requerimiento_1> consultarRequerimiento1() throws SQLException {
+        return requerimiento_1Dao.requerimiento1();
+    }
+
+    public ArrayList<Requerimiento_2> consultarRequerimiento2() throws SQLException {
+        return requerimiento_2Dao.requerimiento2();
+    }
+
+    public ArrayList<Requerimiento_3> consultarRequerimiento3() throws SQLException {
+        return requerimiento_3Dao.requerimiento3();
+    }
+}
+
+public class Requerimiento_1 {
+    private String nombre_Material;
+    private Integer precio_Unidad;
+
+    public String getNombreMaterial(){
+        return nombre_Material;
+    }
+    public void setNombreMaterial(String nombre_Material){
+        this.nombre_Material = nombre_Material;
+    }
+
+    public Integer getPrecioUnidad(){
+        return precio_Unidad;
+    }
+    public void setPrecioUnidad(Integer precio_Unidad){
+        this.precio_Unidad = precio_Unidad;
+    }
+}
+
+public class Requerimiento_2 {
+    private String constructora;
+    private String ciudad;
+
+
+    public String getConstructora() {
+        return constructora;
+    }
+    public void setConstructora(String constructora) {
+        this.constructora = constructora;
+    }
+    
+    public String getCiudad() {
+        return ciudad;
+    }
+    public void setCiudad(String ciudad) {
+        this.ciudad = ciudad;
+    }
+    
+    
+}
+
+public class Requerimiento_3 {
+    private String proveedor;
+    private String nombre_material;
+    private String importado;
+    private Integer precio_Unidad;
+    private Integer cantidad;
+
+
+    public String getProveedor() {
+        return proveedor;
+    }
+    public void setProveedor(String proveedor) {
+        this.proveedor = proveedor;
+    }
+
+    public String getNombre_material() {
+        return nombre_material;
+    }
+    public void setNombre_material(String nombre_material) {
+        this.nombre_material = nombre_material;
+    }
+
+    public String getImportado() {
+        return importado;
+    }
+    public void setImportado(String importado) {
+        this.importado = importado;
+    }
+
+    public Integer getPrecio_Unidad() {
+        return precio_Unidad;
+    }
+    public void setPrecio_Unidad(Integer precio_Unidad) {
+        this.precio_Unidad = precio_Unidad;
+    }
+
+    public Integer getCantidad() {
+        return cantidad;
+    }
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    
+}
+
+public class Requerimiento_1Dao {
+    public ArrayList<Requerimiento_1> requerimiento1() throws SQLException {
+        var respuesta = new ArrayList<Requerimiento_1>();
+
+        String consulta = "SELECT DISTINCT Nombre_Material , Precio_Unidad"
+                        + " FROM MaterialConstruccion mc" 
+                        + " WHERE Importado = 'Si'"
+                        + " ORDER BY Precio_Unidad DESC";
+        
+        try(var connection = JDBCUtilities.getConnection();
+            var statement = connection.prepareStatement(consulta);
+            var rset = statement.executeQuery()){
+
+                while(rset.next()){
+                    var requerimiento_1VO = new Requerimiento_1();
+                    requerimiento_1VO.setNombreMaterial(rset.getString("Nombre_Material"));
+                    requerimiento_1VO.setPrecioUnidad(rset.getInt("Precio_Unidad"));
+
+                    respuesta.add(requerimiento_1VO);
+                }
+        }
+
+        return respuesta;
+
+    }
+}
+
+public class Requerimiento_2Dao {
+    public ArrayList<Requerimiento_2> requerimiento2() throws SQLException {
+        var respuesta = new ArrayList<Requerimiento_2>();
+
+        String consulta = "SELECT DISTINCT p.Constructora , p.Ciudad" 
+                        + " FROM Proyecto p"
+                        + " WHERE p.Ciudad LIKE 'B%'"
+                        + " ORDER BY p.Ciudad";
+
+        try(var connection = JDBCUtilities.getConnection();
+            var statement = connection.prepareStatement(consulta);
+            var rset = statement.executeQuery()){
+                while(rset.next()){
+                    var requerimiento_2VO = new Requerimiento_2();
+                    requerimiento_2VO.setConstructora(rset.getString("Constructora"));
+                    requerimiento_2VO.setCiudad(rset.getString("Ciudad"));
+                    
+                    respuesta.add(requerimiento_2VO);
+                }    
+        }
+        return respuesta;
+    }
+}
+
+public class Requerimiento_3Dao {
+    public ArrayList<Requerimiento_3> requerimiento3() throws SQLException {
+        var respuesta = new ArrayList<Requerimiento_3>();
+        
+        String consulta = "SELECT  c.Proveedor , mc.Nombre_Material , mc.Importado , mc.Precio_Unidad , SUM(C.Cantidad) Cantidad"
+                        + " FROM MaterialConstruccion mc"
+                        + " JOIN Compra c ON mc.ID_MaterialConstruccion = c.ID_MaterialConstruccion"
+                        + " WHERE c.Proveedor = 'Homecenter' AND mc.Importado = 'Si'"
+                        + " GROUP BY mc.ID_MaterialConstruccion , c.Proveedor"
+                        + " HAVING SUM(c.Cantidad) > 100"
+                        + " ORDER BY mc.Nombre_Material";
+
+        try(var connection = JDBCUtilities.getConnection();
+            var statement = connection.prepareStatement(consulta);
+            var rset = statement.executeQuery()){
+
+                while(rset.next()){
+                    var requerimiento_3VO = new Requerimiento_3();
+                    requerimiento_3VO.setProveedor(rset.getString("Proveedor"));
+                    requerimiento_3VO.setNombre_material(rset.getString("Nombre_Material"));
+                    requerimiento_3VO.setImportado(rset.getString("Importado"));
+                    requerimiento_3VO.setPrecio_Unidad(rset.getInt("Precio_Unidad"));
+                    requerimiento_3VO.setCantidad(rset.getInt("Cantidad"));
+
+                    respuesta.add(requerimiento_3VO);
+                }
+        }
+        return respuesta;
+    }
+}
